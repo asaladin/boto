@@ -495,7 +495,8 @@ class Distribution:
             self.set_permissions(object, replace)
         return object
 
-    def create_signed_url(self, url, keypair_id,
+    @classmethod
+    def create_signed_url(cls, url, keypair_id,
                           expire_time=None, valid_after_time=None,
                           ip_address=None, policy_url=None,
                           private_key_file=None, private_key_string=None):
@@ -553,7 +554,7 @@ class Distribution:
         :return: The signed URL.
         """
         # Get the required parameters
-        params = self._create_signing_params(
+        params = cls._create_signing_params(
                      url=url, keypair_id=keypair_id, expire_time=expire_time,
                      valid_after_time=valid_after_time, ip_address=ip_address,
                      policy_url=policy_url, private_key_file=private_key_file,
@@ -572,7 +573,8 @@ class Distribution:
         signed_url = url + sep + "&".join(signed_url_params)
         return signed_url
 
-    def _create_signing_params(self, url, keypair_id,
+    @classmethod
+    def _create_signing_params(cls, url, keypair_id,
                           expire_time=None, valid_after_time=None,
                           ip_address=None, policy_url=None,
                           private_key_file=None, private_key_string=None):
@@ -584,22 +586,22 @@ class Distribution:
         if expire_time and not valid_after_time and not ip_address and not policy_url:
             # we manually construct this policy string to ensure formatting
             # matches signature
-            policy = self._canned_policy(url, expire_time)
+            policy = cls._canned_policy(url, expire_time)
             params["Expires"] = str(expire_time)
         else:
             # If no policy_url is specified, default to the full url.
             if policy_url is None:
                 policy_url = url
             # Can't use canned policy
-            policy = self._custom_policy(policy_url, expires=None,
+            policy = cls._custom_policy(policy_url, expires=None,
                                          valid_after=None,
                                          ip_address=None)
-            encoded_policy = self._url_base64_encode(policy)
+            encoded_policy = cls._url_base64_encode(policy)
             params["Policy"] = encoded_policy
         #sign the policy
-        signature = self._sign_string(policy, private_key_file, private_key_string)
+        signature = cls._sign_string(policy, private_key_file, private_key_string)
         #now base64 encode the signature (URL safe as well)
-        encoded_signature = self._url_base64_encode(signature)
+        encoded_signature = cls._url_base64_encode(signature)
         params["Signature"] = encoded_signature
         params["Key-Pair-Id"] = keypair_id
         return params
